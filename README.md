@@ -34,14 +34,29 @@ models.
 The default chat model is `gemma3:4b` because it is small enough for more Macs to
 download and run. That makes the demo practical, but it also limits answer
 quality, reasoning depth, long-document synthesis, and instruction following. A
-real application would usually use a stronger model, better retrieval/reranking,
-clearer source citations, background job management, more robust document
-parsing, update handling, signed/notarized macOS distribution, and a hardened
-multi-user or production deployment story.
+real production app would want stronger models, better retrieval/reranking,
+better citations, notarized distribution, background jobs, and more robust
+document handling.
 
 Use this as a lightweight starting point or local demo. For serious work, switch
 to the largest Ollama-compatible model your machine can comfortably run and
 expect to improve the retrieval pipeline.
+
+## Where To Improve From Here
+
+Examples that point this MVP toward a more serious RAG application:
+
+| Area | Example next steps |
+|---|---|
+| Stronger LLM | Try an `8B`, `14B`, `32B`, or larger Ollama-compatible chat model that fits your Mac instead of the default `4B` model. Larger models usually answer better but need more RAM and disk. |
+| Retrieval | Add hybrid search, combining vector similarity with keyword/BM25 search so exact terms, names, tickers, and section headings are easier to find. |
+| Reranking | Retrieve more chunks first, then rerank them with a stronger embedding model or cross-encoder before sending only the best context to the LLM. |
+| Citations | Store page numbers, headings, line numbers, and character offsets so answers can link to exact source passages instead of only listing chunks. |
+| Document parsing | Add OCR for scanned PDFs, better table extraction, spreadsheet support, email/HTML cleanup, and richer metadata. |
+| Background jobs | Move indexing, model downloads, and re-indexing into a job queue with progress, retry, cancel, and resume controls. |
+| Evaluation | Keep a small benchmark set of documents and questions to test whether changes improve answer accuracy instead of just changing behavior. |
+| Distribution | Sign and notarize the macOS app with Apple Developer ID for a normal double-click install experience. |
+| Security | Add explicit data-location controls, model provenance notes, sandboxing decisions, and a clearer update process before treating it as a production app. |
 
 ## Install
 
@@ -67,6 +82,38 @@ To install without immediately starting setup:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/aifunmobi/rag-app-macos-online/main/install.sh | RAG_APP_NO_RUN=1 bash
 ```
+
+## Requirements
+
+This installer is for macOS. Apple Silicon is recommended; Intel Macs may work
+but will be slower, especially during model inference.
+
+Recommended before first install:
+
+| Resource | Recommendation |
+|---|---|
+| Free disk space | At least `8-10 GB` free |
+| RAM | `16 GB` recommended |
+| Minimum RAM | `8 GB` can work for the default small model, but expect slower responses |
+| Internet | Required for first install and model downloads |
+
+Approximate disk use for the default setup:
+
+| Component | Approximate size |
+|---|---:|
+| `gemma3:4b` chat model | `3.3 GB` |
+| `nomic-embed-text` embedding model | `275 MB` |
+| Ollama macOS runtime download | `140 MB` compressed, larger after extraction |
+| Python environment and packages | `100-300 MB` |
+| App code | Under `10 MB` |
+| Your documents and index | Depends on what you add to `input/` |
+
+Plan on roughly `5-6 GB` for the default runtime after setup, plus extra room
+for temporary downloads, future model changes, and your documents. `8-10 GB`
+free is the safer recommendation for a smooth first install.
+
+Larger or higher-quality local models can improve answers, but they require
+more disk space and substantially more RAM.
 
 ## Run After Install
 
