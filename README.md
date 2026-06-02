@@ -1,8 +1,21 @@
 # RAG Chat for macOS
 
-Local document chat for macOS. The app installs its own Python runtime with
-`uv`, downloads the standalone Ollama runtime, pulls the required local models,
-indexes files from `input/`, and opens a browser-based chat UI.
+Local document chat for macOS, packaged as a small MVP installer. The app
+installs its own Python runtime with `uv`, downloads the standalone Ollama
+runtime, pulls the required local models, indexes files from `input/`, and opens
+a browser-based chat UI.
+
+RAG means Retrieval-Augmented Generation. Instead of asking a language model to
+answer from memory alone, the app first retrieves relevant chunks from your
+documents and sends those chunks to the model as context. In practical terms:
+
+1. You put files into `input/`.
+2. The app extracts text, splits it into chunks, and stores embeddings locally.
+3. When you ask a question, it finds the most relevant chunks.
+4. The local LLM answers using those retrieved chunks.
+
+This is useful for asking questions about PDFs, notes, docs, code files, and
+other local material without uploading the files to a hosted AI service.
 
 `online` in this repo name means the installer downloads everything it needs
 from the internet on first run. It does not mean your documents or chat run in
@@ -10,6 +23,25 @@ the cloud.
 
 Everything runs locally after first setup. Your documents and chat index stay in
 the app folder.
+
+## MVP Scope
+
+This repo is intentionally a mini, installable proof-of-concept rather than a
+full production RAG product. It is meant to make the local workflow easy to try:
+one Terminal command, a browser UI, local document indexing, and local Ollama
+models.
+
+The default chat model is `gemma3:4b` because it is small enough for more Macs to
+download and run. That makes the demo practical, but it also limits answer
+quality, reasoning depth, long-document synthesis, and instruction following. A
+real application would usually use a stronger model, better retrieval/reranking,
+clearer source citations, background job management, more robust document
+parsing, update handling, signed/notarized macOS distribution, and a hardened
+multi-user or production deployment story.
+
+Use this as a lightweight starting point or local demo. For serious work, switch
+to the largest Ollama-compatible model your machine can comfortably run and
+expect to improve the retrieval pipeline.
 
 ## Install
 
