@@ -1,0 +1,12 @@
+data/
+vendor/
+.tools/
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+.env
+.super/
+input/*
+!input/.gitkeep
+*.egg-info/

@@ -1,0 +1,16 @@
+Reliable macOS launch when Gatekeeper blocks double-click
+
+Try RAG Chat Setup.app first. If macOS blocks the app or setup-mac.command, use
+Terminal:
+
+1. Open Terminal.
+2. Type this, including the space after bash:
+
+     bash 
+
+3. Drag setup-mac.command into the Terminal window.
+4. Press Return.
+
+This runs the same installer without asking Finder to open an unsigned command
+file directly. The installer clears quarantine from the app folder after it
+starts.

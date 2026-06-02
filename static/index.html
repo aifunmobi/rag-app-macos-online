@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAG Chat</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+  <aside id="sidebar">
+
+    <div class="sidebar-header">
+      <div class="app-title">
+        <div class="app-title-icon" aria-hidden="true">◈</div>
+        RAG Chat
+        <button id="help-btn" class="icon-btn" aria-label="Help &amp; info"
+                title="Help &amp; info">?</button>
+      </div>
+      <button id="new-chat-btn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <line x1="7" y1="1" x2="7" y2="13"/>
+          <line x1="1" y1="7" x2="13" y2="7"/>
+        </svg>
+        New chat
+      </button>
+    </div>
+
+    <div class="sidebar-section-label">Conversations</div>
+    <div id="history-list" role="list" aria-label="Conversation history"></div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-bottom">
+      <!-- Model selector -->
+      <div class="control-row">
+        <span class="control-label">Model</span>
+        <select id="model-select" aria-label="Select chat model">
+          <option>Loading…</option>
+        </select>
+      </div>
+
+      <!-- Index status + reindex -->
+      <div class="control-row">
+        <button id="index-label-btn" class="control-label control-label-btn"
+                aria-label="Show indexed files" title="Show indexed files">
+          Index <span class="index-label-caret" aria-hidden="true">▸</span>
+        </button>
+        <span class="index-status" id="index-status-text">
+          <strong>0</strong> docs · <strong>0</strong> chunks
+        </span>
+        <button id="reindex-btn" aria-label="Re-index documents">Re-index</button>
+      </div>
+
+      <!-- Upload files -->
+      <button id="upload-btn" class="upload-btn" aria-label="Upload files">
+        <span aria-hidden="true">⬆</span> Upload files
+      </button>
+
+      <!-- Theme toggle -->
+      <button id="theme-toggle" aria-label="Toggle light/dark theme">
+        <span class="toggle-icon" id="theme-icon">🌙</span>
+        <span class="toggle-label" id="theme-label">Dark mode</span>
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- ── Main pane ───────────────────────────────────────────────────── -->
+  <main id="main">
+
+    <!-- Ollama unavailable banner -->
+    <div id="ollama-banner" role="alert" aria-live="assertive">
+      <span class="banner-icon" aria-hidden="true">⚠️</span>
+      <span class="banner-text">
+        Ollama is not responding. Responses will fail until it's reachable.
+      </span>
+      <button id="banner-retry-btn">Retry</button>
+      <button id="banner-dismiss-btn" aria-label="Dismiss">×</button>
+    </div>
+
+    <!-- Ingest progress banner (glowing) -->
+    <div id="ingest-banner" role="status" aria-live="polite" aria-hidden="true">
+      <span class="ingest-spinner" aria-hidden="true"></span>
+      <span class="ingest-text">Please wait — ingesting files…</span>
+    </div>
+
+    <!-- Empty state (shown when no messages) -->
+    <div id="empty-state" role="status" aria-live="polite">
+      <div class="empty-icon" id="empty-icon" aria-hidden="true">📂</div>
+      <h2 id="empty-title">Nothing indexed yet</h2>
+      <p id="empty-desc">
+        <strong>Drag &amp; drop files anywhere</strong>, or use the Upload button.
+        They’re saved to <code>input/</code> and indexed automatically.<br>
+        <span class="accepted-types">Accepted: PDF, Word (.docx), text, Markdown, HTML, and code files.</span>
+      </p>
+      <button id="empty-upload-btn" class="upload-btn" aria-label="Upload files">
+        <span aria-hidden="true">⬆</span> Upload files
+      </button>
+    </div>
+
+    <!-- Scrollable message list -->
+    <div id="messages" role="log" aria-label="Chat messages" aria-live="polite"></div>
+
+    <!-- Composer -->
+    <div id="composer">
+      <div class="composer-inner">
+        <textarea
+          id="message-input"
+          rows="1"
+          placeholder="Ask anything about your documents…"
+          aria-label="Message input"
+          autocomplete="off"
+          spellcheck="true"
+        ></textarea>
+        <button id="send-btn" aria-label="Send message">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+</div>
+
+<!-- Help / info modal (opened by the ? button) -->
+<div id="help-modal" class="modal-overlay" aria-hidden="true">
+  <div class="modal modal-help" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+    <div class="modal-header">
+      <h3 id="help-modal-title">How RAG Chat works</h3>
+      <button id="help-modal-close" class="modal-close" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body help-body">
+
+      <p class="help-intro">
+        Add your documents, then ask questions in plain language. Answers are
+        generated <em>only</em> from your files and show the exact sources they came from.
+      </p>
+
+      <h4>📥 Adding documents</h4>
+      <ul>
+        <li><strong>Drag &amp; drop</strong> files anywhere on the window, or click <strong>Upload files</strong>.</li>
+        <li>Or drop them into the <code>input/</code> folder on disk — they’re picked up automatically.</li>
+        <li>Supported: <strong>PDF, Word (.docx), text, Markdown, HTML, and code files</strong>.</li>
+        <li>New and changed files are indexed automatically; you’ll see a glowing progress bar while they’re processed.</li>
+      </ul>
+
+      <h4>💬 Asking questions</h4>
+      <ul>
+        <li>Type in the box and press <strong>Enter</strong> (<strong>Shift+Enter</strong> for a new line).</li>
+        <li>Each answer lists its <strong>Sources</strong> — the file and chunk it drew from.</li>
+        <li><strong>Copy</strong> buttons appear on every answer and code block.</li>
+        <li>Past chats are saved in the <strong>sidebar</strong> — click to reopen, ✕ to delete.</li>
+      </ul>
+
+      <h4>🔄 Re-index — and when to use it</h4>
+      <p>
+        Re-index re-scans the <code>input/</code> folder: <strong>new or edited</strong> files get
+        (re)processed, <strong>unchanged</strong> files are skipped, and files you <strong>deleted</strong>
+        are removed from the index. It’s incremental — it doesn’t rebuild everything.
+      </p>
+      <p><strong>You usually don’t need it</strong> — drops and uploads index automatically. Use it when:</p>
+      <ul>
+        <li>You changed files in <code>input/</code> while the app <strong>wasn’t running</strong>.</li>
+        <li>You <strong>bulk-copied</strong> many files and want to be sure none were missed.</li>
+        <li>Files are on a <strong>network/mounted drive</strong> where auto-detection is unreliable.</li>
+        <li>The counts look <strong>out of sync</strong> and you want a full re-check.</li>
+      </ul>
+
+      <h4>🗂️ Index button &amp; managing files</h4>
+      <p>Click the <strong>Index</strong> label (top of the sidebar controls) to open the list of
+         indexed files with their chunk count and time. Click the <strong>🗑 trash icon</strong>
+         next to any file to delete it — that removes it from both the <code>input/</code> folder
+         and the index. The index is reconciled automatically when you close the list.</p>
+
+      <h4>⚙️ Model &amp; theme</h4>
+      <ul>
+        <li><strong>Model</strong> dropdown switches which local model answers (embeddings always use nomic-embed-text).</li>
+        <li><strong>🌙 / ☀️</strong> toggles light / dark mode (remembered between visits).</li>
+      </ul>
+
+      <p class="help-foot">
+        Everything runs locally via Ollama. Your documents and chats never leave this machine.
+        Data lives in <code>data/rag.db</code>.
+      </p>
+
+    </div>
+  </div>
+</div>
+
+<!-- Indexed-files modal (opened by the Index button) -->
+<div id="docs-modal" class="modal-overlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="docs-modal-title">
+    <div class="modal-header">
+      <h3 id="docs-modal-title">Indexed files</h3>
+      <button id="docs-modal-close" class="modal-close" aria-label="Close">×</button>
+    </div>
+    <div id="docs-modal-body" class="modal-body"></div>
+  </div>
+</div>
+
+<!-- Hidden file input (opened by the Upload buttons) -->
+<input type="file" id="file-input" multiple hidden
+       accept=".pdf,.docx,.txt,.md,.markdown,.html,.htm,.py,.js,.ts,.jsx,.tsx,.json,.css,.scss,.sh,.yaml,.yml,.toml,.ini,.csv,.rst">
+
+<!-- Full-window drag-and-drop overlay -->
+<div id="drop-overlay" aria-hidden="true">
+  <div class="drop-overlay-inner">⬇ Drop files to upload</div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
