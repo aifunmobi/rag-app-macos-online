@@ -19,8 +19,10 @@ Open Terminal and run:
 curl -fsSL https://raw.githubusercontent.com/aifunmobi/rag-app-macos-online/main/install.sh | bash
 ```
 
-The installer clones this repo into `~/Applications/rag-app`, fixes local macOS
-permissions, downloads the runtime dependencies, and starts the app.
+The installer creates a normal folder at `~/Applications/rag-app`, fixes local
+macOS permissions, downloads the runtime dependencies, and starts the app. Do
+not use GitHub's "Download ZIP" button for first install; the curl command is
+the supported path.
 
 To install somewhere else:
 

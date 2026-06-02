@@ -7,6 +7,7 @@ BRANCH="${RAG_APP_BRANCH:-main}"
 INSTALL_DIR="${RAG_APP_HOME:-$HOME/Applications/rag-app}"
 NO_RUN="${RAG_APP_NO_RUN:-0}"
 APP_DIR=""
+TMPDIR=""
 
 fail() {
   printf '\nERROR: %s\n' "$1" >&2
@@ -33,6 +34,30 @@ github_archive_url() {
   printf 'https://github.com/%s/archive/refs/heads/%s.tar.gz\n' "$slug" "$branch"
 }
 
+cleanup() {
+  if [[ -n "$TMPDIR" ]]; then
+    rm -rf "$TMPDIR"
+  fi
+}
+
+install_from_archive() {
+  local archive_url="$1"
+  local srcdir
+
+  notice "Downloading project files"
+  TMPDIR="$(mktemp -d)"
+  curl --fail --location --show-error "$archive_url" --output "$TMPDIR/rag-app.tgz"
+  tar -xzf "$TMPDIR/rag-app.tgz" -C "$TMPDIR"
+  srcdir="$(find "$TMPDIR" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+  [[ -n "$srcdir" ]] || fail "Downloaded project did not contain an app folder."
+
+  rm -rf "$srcdir/.git" "$srcdir/.tools" "$srcdir/.venv" "$srcdir/data" "$srcdir/vendor" "$srcdir/input"
+  mkdir -p "$INSTALL_DIR" "$INSTALL_DIR/input"
+  ditto "$srcdir" "$INSTALL_DIR"
+}
+
+trap cleanup EXIT
+
 if [[ "$(uname -s)" != "Darwin" ]]; then
   fail "This installer is for macOS."
 fi
@@ -44,32 +69,16 @@ printf 'Folder:  %s\n' "$INSTALL_DIR"
 
 mkdir -p "$(dirname "$INSTALL_DIR")"
 
-if command -v git >/dev/null 2>&1; then
-  if [[ -d "$INSTALL_DIR/.git" ]]; then
-    notice "Updating existing checkout"
-    git -C "$INSTALL_DIR" fetch --depth 1 origin "$BRANCH"
-    git -C "$INSTALL_DIR" checkout "$BRANCH"
-    git -C "$INSTALL_DIR" pull --ff-only origin "$BRANCH"
-  else
-    if [[ -e "$INSTALL_DIR" ]]; then
-      fail "$INSTALL_DIR already exists and is not a git checkout. Move it or set RAG_APP_HOME to a different folder."
-    fi
-    notice "Cloning project"
-    git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$INSTALL_DIR"
-  fi
-else
-  ARCHIVE_URL="${RAG_APP_ARCHIVE_URL:-$(github_archive_url "$REPO_URL" "$BRANCH" || true)}"
-  [[ -n "$ARCHIVE_URL" ]] || fail "git is not installed and the repo URL is not a standard GitHub URL. Set RAG_APP_ARCHIVE_URL."
-  [[ ! -e "$INSTALL_DIR" ]] || fail "$INSTALL_DIR already exists. Install git to update it, or move the folder first."
+ARCHIVE_URL="${RAG_APP_ARCHIVE_URL:-$(github_archive_url "$REPO_URL" "$BRANCH" || true)}"
+[[ -n "$ARCHIVE_URL" ]] || fail "The repo URL is not a standard GitHub URL. Set RAG_APP_ARCHIVE_URL."
 
-  notice "Downloading project archive"
-  tmpdir="$(mktemp -d)"
-  trap 'rm -rf "$tmpdir"' EXIT
-  curl --fail --location --show-error "$ARCHIVE_URL" --output "$tmpdir/rag-app.tgz"
-  tar -xzf "$tmpdir/rag-app.tgz" -C "$tmpdir"
-  srcdir="$(find "$tmpdir" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
-  [[ -n "$srcdir" ]] || fail "Downloaded archive did not contain a project folder."
-  mv "$srcdir" "$INSTALL_DIR"
+if [[ -d "$INSTALL_DIR/.git" ]] && command -v git >/dev/null 2>&1; then
+  notice "Updating existing git checkout"
+  git -C "$INSTALL_DIR" fetch --depth 1 origin "$BRANCH"
+  git -C "$INSTALL_DIR" checkout "$BRANCH"
+  git -C "$INSTALL_DIR" pull --ff-only origin "$BRANCH"
+else
+  install_from_archive "$ARCHIVE_URL"
 fi
 
 notice "Preparing local files"

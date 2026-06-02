@@ -24,7 +24,7 @@ Reliable option:
   Then drag setup-mac.command into the Terminal window and press Return.
 
 Alternative:
-  Open Terminal, change into the unzipped rag-app folder, then run:
+  Open Terminal, change into the rag-app folder, then run:
 
     xattr -d -r com.apple.quarantine .
     chmod +x setup-mac.command "Start RAG (online).command" run.sh
