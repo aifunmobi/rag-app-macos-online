@@ -51,6 +51,16 @@ bash ~/Applications/rag-app/setup-mac.command
 The first launch is large because it downloads Python, Ollama, Python packages,
 and local LLM model files. Later launches reuse those downloads.
 
+If your browser does not open automatically after setup finishes, open a browser
+and enter:
+
+```text
+http://127.0.0.1:8000
+```
+
+If port `8000` is already in use, the setup window prints the alternate local
+URL to open.
+
 ## What It Installs
 
 The setup script:
@@ -72,6 +82,9 @@ TypeScript, Python, and other source files.
 
 The app indexes files automatically while it is running. Keep the Terminal
 window open while using it. Press `Ctrl+C` in that window to stop the server.
+
+If the browser window closes, reopen `http://127.0.0.1:8000` while the server is
+still running.
 
 ## Gatekeeper Note
 
