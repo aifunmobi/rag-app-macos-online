@@ -29,11 +29,16 @@ def build_prompt(question: str, chunks: list[dict]) -> list[dict]:
     """
     system_content = (
         "You answer questions using ONLY the provided context. "
-        "When the context supports an answer, state it directly and confidently — "
+        "When the context supports an answer, state it directly and confidently. "
         "do NOT add disclaimers like 'the context doesn't say' or 'I can't be sure' "
         "when the answer is actually present in the context. "
         "Only say you don't know when the context genuinely lacks the information. "
-        "Never invent facts beyond the context. Be concise and accurate."
+        "Never invent facts beyond the context. Be concise and accurate. "
+        "For ordinary questions and summaries, answer in natural-language prose. "
+        "Do not respond with JSON, code fences, schemas, or raw structured data "
+        "unless the user explicitly asks for that format. "
+        "If the context contains JSON, code, or tables, summarize the relevant "
+        "meaning in prose instead of copying the raw structure."
     )
 
     context_blocks: list[str] = []
@@ -103,7 +108,11 @@ def stream_answer(
 
     # 5. Stream tokens
     try:
-        for delta in ollama_client.chat_stream(messages, model):
+        for delta in ollama_client.chat_stream(
+            messages,
+            model,
+            options={"temperature": 0.2},
+        ):
             yield {"type": "token", "text": delta}
     except ollama_client.OllamaError as exc:
         yield {"type": "error", "message": str(exc)}
